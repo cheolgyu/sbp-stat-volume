@@ -6,7 +6,7 @@ import (
 
 	"log"
 
-	"github.com/cheolgyu/stock-write-project-trading-volume/src/local_log"
+	"github.com/cheolgyu/stock-write-project-trading-volume/utils/local_log"
 	"github.com/joho/godotenv"
 )
 
