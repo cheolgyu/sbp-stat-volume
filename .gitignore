@@ -1,0 +1,13 @@
+data/
+highserpot_stock.pem
+*.pem
+tmp/
+*.xlsx
+price.json
+test/*.sql
+*.pem
+*.tar
+.env.prod
+bin/
+data/download/
+logs/
