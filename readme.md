@@ -57,7 +57,7 @@
       
 
       meta.code 에서 코드목록 select 해온 후에.
-      code별 마지막 저장 단위로 frequency result 테이블의 컬럼을 체크 한 후에. ==> frequency result 의 칼럼 으로 하기.
+      code별 마지막 저장 단위로 tb_result 테이블의 컬럼을 체크 한 후에. ==> tb_result 의 칼럼 으로 하기.
       칼럼 값보다 큰 데이터를 조회 해야하는데 년 도별 끊어서 조회하기. 
          방법: 
             코드에 해당하는 price의 min과 max 일자를 조회후 연도별 배열을 만들고
@@ -86,6 +86,35 @@
             모드 결과 테이블저장이 끝나면 단위결 거래량의 합 테이블의 데이터를 지운다.
    
   ---
+      dao
+         전처리
+            코드목록 조회
+            처리기간 범위 만들기
+               시작일 찾기 : 코드별 마지막 실행 일자 조회(tb_result 의 칼럼 )
+               기간 만들기:
+                  마지막 실행 일자 기준 이후의 일자 중 min과 max 값 조회
+                  golang- main과 max 의 데이터 연도별로 나누기.
+         
+         가격합테이블 데이터 만들기
+            연도별 가격 데이터 조회 루프
+               golang- 가격일자를 단위구분으로 나누어 저장하기. map에다가
+               golang-  나누어 저장된 거래량의 합 을 구하기. 
+               구한 합을 tb_sum_by_unit에 저장
+         
+         집계기능
+            tb_sum_by_unit에 데이터 조회
+            golang- 연도별 평균가, 최고가,최소가, 최고저의 범위 계산
+            계산 결과 저장를 tb_aggregation_by_year에 저장
+
+         결과
+            tb_aggregation_by_year에 종목의 전체연도 데이터 조회
+            golang- 값과 퍼센트 만들기
+            값과 퍼센트를 tb_result에 저장
+
+
+
+
+         
   
 
 
