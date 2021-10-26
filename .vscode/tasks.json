@@ -1,0 +1,49 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    //gin -i   -a 5001  -p 5000    run  main.go    
+    //gin  -a 5001  -p 5000    run  main.go   
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "run stock-write-project-trading-volume ",
+            "type": "shell",
+            "command": " go run main.go ",
+            "args": [],
+            "problemMatcher": [
+                "$tsc"
+            ],
+            "presentation": {
+                "reveal": "always"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": "none"
+        },
+        {
+            "label": "1. build",
+            "type": "shell",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "options": {
+                "env": {
+                    "GOOS": "linux",
+                    "GOARCH": "amd64",
+                }
+            },
+          //  "command": "go build  -ldflags '-w -s' -a -installsuffix cgo   -o ../stock-write-ticker/bin/stock-write main.go",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "1.1. build move file",
+            ]
+        },
+        {
+            "label": "1.1. build move file",
+            "type": "shell",
+         //   "command": " cp ./.env.prod ../stock-write-ticker/bin/.env.local",
+        },
+    ]
+}
