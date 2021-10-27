@@ -6,6 +6,7 @@ import (
 
 	"log"
 
+	"github.com/cheolgyu/stock-write-project-trading-volume/src/handler/preprocess"
 	"github.com/cheolgyu/stock-write-project-trading-volume/utils/local_log"
 	"github.com/joho/godotenv"
 )
@@ -31,5 +32,5 @@ func main() {
 }
 
 func project_run() {
-
+	preprocess.GetCodeList()
 }
