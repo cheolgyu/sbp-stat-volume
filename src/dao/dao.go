@@ -19,7 +19,7 @@ func GetCodeList() ([]model.CodeInfo, error) {
 		mc.code_type,
 	
 		coalesce(tr.last_updated, 00000000) as last_updated
-	from meta.code mc left join project_trading_volume.tb_result tr on mc.id = tr.code_id 
+	from meta.code mc left join project_trading_volume.tb_total tr on mc.id = tr.code_id 
 	where 
 		mc.code_type=1
 	
@@ -96,13 +96,46 @@ func GetPriceList(code_id int, dt int) ([]model.PriceInfo, error) {
 	return res, err
 }
 
+const query_insert_tb_sum = `INSERT INTO  project_trading_volume.tb_sum (` +
+	`code_id, unit_type, yyyy, unit, sum_val)` +
+	`VALUES ($1, $2, $3, $4, $5)` +
+	` ON CONFLICT (code_id, unit_type, yyyy, unit) DO UPDATE SET ` +
+	`   sum_val=$5`
+
+func InsertTbSum(list []model.CodeSum) error {
+
+	client := db.Conn
+	stmt, err := client.Prepare(query_insert_tb_sum)
+	if err != nil {
+		log.Println("쿼리:Prepare 오류: ")
+		log.Fatal(err)
+		panic(err)
+	}
+	defer stmt.Close()
+	//code_id, unit_type,  max_unit, sum_val
+	for _, v := range list {
+
+		_, err = stmt.Exec(
+			v.Code.Id, v.UnitType, v.Year, v.Unit, v.Sum,
+		)
+		if err != nil {
+			log.Println("쿼리:stmt.Exec 오류: ")
+			log.Printf("%+v ", v)
+			log.Fatal(err)
+			panic(err)
+		}
+	}
+
+	return err
+}
+
 const query_insert_tb_year = `INSERT INTO  project_trading_volume.tb_year (` +
 	`code_id, unit_type, yyyy, max_unit, max_unit_arr, min_unit, min_unit_arr, avg_vol, percent)` +
 	`VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)` +
 	` ON CONFLICT (code_id, unit_type, yyyy) DO UPDATE SET ` +
 	`  max_unit=$4, max_unit_arr=$5, min_unit=$6, min_unit_arr=$7, avg_vol=$8, percent=$9`
 
-func InsertCodeUnit(item model.CodeUnit) error {
+func InsertTbYear(item model.CodeUnit) error {
 
 	client := db.Conn
 	stmt, err := client.Prepare(query_insert_tb_year)

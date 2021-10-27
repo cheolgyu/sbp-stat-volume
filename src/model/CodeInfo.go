@@ -28,6 +28,14 @@ type Opening struct {
 	Week    int
 	Quarter int
 }
+type CodeSum struct {
+	Code
+	UnitType int
+	Year     int
+	Unit     int
+	Sum      int
+}
+
 type CodeUnit struct {
 	Code
 

@@ -20,14 +20,27 @@ func GetCodeList() []model.CodeInfo {
 	for _, v := range res {
 		price_arr := GetPriceList(v.Code.Id, v.LastUpdated)
 		//log.Println(price_arr)
-		w_arr, m_arr, q_arr := split_unit(v.Code.Id, price_arr)
+		sum_list, week, month, quarter := sum_by_unit(v.Code.Id, price_arr)
+		err := dao.InsertTbSum(sum_list)
+		if err != nil {
+			log.Fatal("InsertCodeUnit err ===> ", err)
+			log.Panic(err)
+		}
+		w_arr := detail_by_year(week, 1)
+		m_arr := detail_by_year(month, 2)
+		q_arr := detail_by_year(quarter, 3)
+
+		// log.Println(w_arr)
+		// log.Println(m_arr)
+		// log.Println(q_arr)
+
 		list := append(w_arr, m_arr...)
 		list = append(list, q_arr...)
 		cu := model.CodeUnit{
 			Code: v.Code,
 			List: list,
 		}
-		err := dao.InsertCodeUnit(cu)
+		err = dao.InsertTbYear(cu)
 		if err != nil {
 			log.Fatal("InsertCodeUnit err ===> ", err)
 			log.Panic(err)
@@ -48,7 +61,8 @@ func GetPriceList(code_id int, dt int) []model.PriceInfo {
 	return res
 }
 
-func split_unit(code_id int, list []model.PriceInfo) ([]model.UnitByYear, []model.UnitByYear, []model.UnitByYear) {
+func sum_by_unit(code_id int, list []model.PriceInfo) ([]model.CodeSum, map[int]map[int]int, map[int]map[int]int, map[int]map[int]int) {
+	//([]model.UnitByYear, []model.UnitByYear, []model.UnitByYear) {
 
 	week := make(map[int]map[int]int)
 	month := make(map[int]map[int]int)
@@ -72,19 +86,32 @@ func split_unit(code_id int, list []model.PriceInfo) ([]model.UnitByYear, []mode
 		quarter[v.Opening.YY][v.Opening.Quarter] += v.Price.Volume
 
 	}
+	var res []model.CodeSum
+	res = append(res, sum(code_id, 1, week)...)
+	res = append(res, sum(code_id, 2, month)...)
+	res = append(res, sum(code_id, 3, quarter)...)
 	// log.Println(week)
 	// log.Println(month)
 	// log.Println(quarter)
-	w_arr := detail_by_year(week, 1)
-	m_arr := detail_by_year(month, 2)
-	q_arr := detail_by_year(quarter, 3)
 
-	// log.Println(w_arr)
-	// log.Println(m_arr)
-	// log.Println(q_arr)
+	return res, week, month, quarter
 
-	return w_arr, m_arr, q_arr
+}
 
+func sum(code_id int, unit_type int, unit_map map[int]map[int]int) []model.CodeSum {
+	var res []model.CodeSum
+	for year, year_map := range unit_map {
+		for k, v := range year_map {
+			item := model.CodeSum{}
+			item.Code.Id = code_id
+			item.UnitType = unit_type
+			item.Year = year
+			item.Unit = k
+			item.Sum = v
+			res = append(res, item)
+		}
+	}
+	return res
 }
 
 func detail_by_year(unit_map map[int]map[int]int, unit_type int) []model.UnitByYear {
