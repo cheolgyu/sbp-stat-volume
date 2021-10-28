@@ -13,15 +13,18 @@ import (
 func GetCodeList() ([]model.CodeInfo, error) {
 	var res []model.CodeInfo
 	query := `
-	select
-		mc.id,
-		mc.code,
-		mc.code_type,
-	
-		coalesce(tr.last_updated, 00000000) as last_updated
-	from meta.code mc left join project_trading_volume.tb_total tr on mc.id = tr.code_id 
-	where 
-		mc.code_type=1
+SELECT MC.ID,
+	MC.CODE,
+	MC.CODE_TYPE,
+	COALESCE(TR.LAST_UPDATED,0) AS LAST_UPDATED,
+	COALESCE(MO.YYYY,0 ) as yyyy,
+	COALESCE(MO.MM,0 ) as mm,
+	COALESCE(MO.WEEK,0 ) as week,
+	COALESCE(MO.QUARTER,0 ) as quarter
+FROM META.CODE MC
+LEFT JOIN PROJECT_TRADING_VOLUME.TB_TOTAL TR ON MC.ID = TR.CODE_ID
+LEFT JOIN META.OPENING MO ON TR.LAST_UPDATED = MO.DT
+WHERE MC.CODE_TYPE = 1
 	
 `
 	//log.Println(query)
@@ -35,7 +38,8 @@ func GetCodeList() ([]model.CodeInfo, error) {
 	for rows.Next() {
 		item := model.CodeInfo{}
 
-		if err := rows.Scan(&item.Code.Id, &item.Code.Code, &item.Code.Code_type, &item.LastUpdated); err != nil {
+		if err := rows.Scan(&item.Code.Id, &item.Code.Code, &item.Code.Code_type, &item.LastUpdated,
+			&item.Opening.YY, &item.Opening.MM, &item.Opening.Week, &item.Opening.Quarter); err != nil {
 			log.Fatal(err)
 			panic(err)
 		}
@@ -127,6 +131,42 @@ func InsertTbSum(list []model.CodeSum) error {
 	}
 
 	return err
+}
+
+func SelectTbSumByUnitType(item model.CodeInfo, unit_type int) ([]model.CodeSum, error) {
+	var res []model.CodeSum
+	query := `
+	SELECT row_pk, code_id, unit_type, yyyy, unit, sum_val
+	FROM project_trading_volume.tb_sum
+	WHERE	code_id =  $1 and unit_type = $2 
+		and yyyy >= $3
+		 
+`
+	//log.Println(query)
+	rows, err := db.Conn.QueryContext(context.Background(), query, item.Code.Id, unit_type, item.Opening.YY)
+	if err != nil {
+		log.Fatal(err)
+		panic(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		item := model.CodeSum{}
+
+		if err := rows.Scan(&item.Row_pk, &item.Code.Id, &item.UnitType, &item.Year, &item.Unit, &item.Sum); err != nil {
+			log.Fatal(err)
+			panic(err)
+		}
+		res = append(res, item)
+
+	}
+	// Check for errors from iterating over rows.
+	if err := rows.Err(); err != nil {
+		log.Fatal(err)
+		panic(err)
+	}
+
+	return res, err
 }
 
 const query_insert_tb_year = `INSERT INTO  project_trading_volume.tb_year (` +

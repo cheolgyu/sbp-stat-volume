@@ -18,50 +18,73 @@ func GetCodeList() []model.CodeInfo {
 
 	//log.Println(res)
 	for _, v := range res {
-		price_arr := GetPriceList(v.Code.Id, v.LastUpdated)
-		//log.Println(price_arr)
-		sum_list, week, month, quarter := sum_by_unit(v.Code.Id, price_arr)
-		err := dao.InsertTbSum(sum_list)
-		if err != nil {
-			log.Fatal("InsertCodeUnit err ===> ", err)
-			log.Panic(err)
-		}
-		w_arr := detail_by_year(week, model.GetUnitValue("w"))
-		m_arr := detail_by_year(month, model.GetUnitValue("m"))
-		q_arr := detail_by_year(quarter, model.GetUnitValue("q"))
-
-		// log.Println(w_arr)
-		// log.Println(m_arr)
-		// log.Println(q_arr)
-
-		list := append(w_arr, m_arr...)
-		list = append(list, q_arr...)
-		cu := model.CodeUnit{
-			Code: v.Code,
-			List: list,
-		}
-		err = dao.InsertTbYear(cu)
-		if err != nil {
-			log.Fatal("InsertCodeUnit err ===> ", err)
-			log.Panic(err)
-		}
-		//log.Println(cu)
-
+		DoSumByUnit(v)
+		DoCalculateUnitDataByYear(v)
+		DoYearOfTotal(v)
 	}
 
 	return res
-
 }
 
-func GetPriceList(code_id int, dt int) []model.PriceInfo {
-	res, err := dao.GetPriceList(code_id, dt)
+/*
+코드의 마지막 업데이트일 이후의 가격목록을 unit별 합계를 구해서 TB_SUM에 저장하기
+*/
+func DoSumByUnit(code_info model.CodeInfo) {
+	new_price_arr, err := dao.GetPriceList(code_info.Code.Id, code_info.LastUpdated)
 	if err != nil {
 		log.Panic("GetPriceList 에러")
 	}
-	return res
+
+	//log.Println(price_arr)
+	sum_list := sum_by_unit(code_info.Code.Id, new_price_arr)
+	err = dao.InsertTbSum(sum_list)
+	if err != nil {
+		log.Fatal("InsertCodeUnit err ===> ", err)
+		log.Panic(err)
+	}
 }
 
-func sum_by_unit(code_id int, list []model.PriceInfo) ([]model.CodeSum, map[int]map[int]int, map[int]map[int]int, map[int]map[int]int) {
+/*
+TB_SUM에서 코드의 마지막 업데이트일자의 연도보다 같거나 큰 TB_SUM 목록을 단위별로 조회 후 TB_YEAR에 저장하기
+*/
+func DoCalculateUnitDataByYear(code_info model.CodeInfo) {
+	var res []model.UnitByYear
+
+	for _, v := range model.UnitType {
+
+		list, err := dao.SelectTbSumByUnitType(code_info, v)
+		if err != nil {
+			log.Fatal("InsertCodeUnit err ===> ", err)
+			log.Panic(err)
+		}
+		unit_map := convert_codesum_to_map(list)
+		arr := agg_by_year(unit_map, v)
+		res = append(res, arr...)
+	}
+
+	//insert year
+	cu := model.CodeUnit{
+		Code: code_info.Code,
+		List: res,
+	}
+	err := dao.InsertTbYear(cu)
+	if err != nil {
+		log.Fatal("InsertCodeUnit err ===> ", err)
+		log.Panic(err)
+	}
+
+}
+
+/*
+TB_YEAR목록을 조회 후 계산하여 저장 하기.
+*/
+func DoYearOfTotal(code_info model.CodeInfo) {
+	// 조회
+	// 계산
+	// 저장
+}
+
+func sum_by_unit(code_id int, list []model.PriceInfo) []model.CodeSum {
 	//([]model.UnitByYear, []model.UnitByYear, []model.UnitByYear) {
 
 	week := make(map[int]map[int]int)
@@ -94,7 +117,7 @@ func sum_by_unit(code_id int, list []model.PriceInfo) ([]model.CodeSum, map[int]
 	// log.Println(month)
 	// log.Println(quarter)
 
-	return res, week, month, quarter
+	return res
 
 }
 
@@ -115,7 +138,26 @@ func sum(code_id int, unit_type int, unit_map map[int]map[int]int) []model.CodeS
 	return res
 }
 
-func detail_by_year(unit_map map[int]map[int]int, unit_type int) []model.UnitByYear {
+/*
+TB_CODESUM 목록을 연도의 UNIT단위의 합값 형태로 변환한다.
+*/
+func convert_codesum_to_map(list []model.CodeSum) map[int]map[int]int {
+	unit_datas := make(map[int]map[int]int)
+
+	for _, v := range list {
+		if _, exist := unit_datas[v.Year]; !exist {
+			unit_datas[v.Year] = map[int]int{}
+		}
+		unit_datas[v.Year][v.Unit] = v.Sum
+	}
+
+	return unit_datas
+}
+
+/*
+TB_CODESUM의 연도별 unit별 맵데이터로 연도별 unit의 집계 데이터를 구한다.
+*/
+func agg_by_year(unit_map map[int]map[int]int, unit_type int) []model.UnitByYear {
 
 	res := []model.UnitByYear{}
 

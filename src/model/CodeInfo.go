@@ -4,9 +4,20 @@ import (
 	"fmt"
 )
 
+var UnitType map[string]int
+
+func init() {
+	UnitType = map[string]int{
+		"w": 1,
+		"m": 2,
+		"q": 3,
+	}
+}
+
 type CodeInfo struct {
 	Code
 	LastUpdated int
+	Opening
 }
 
 type Code struct {
