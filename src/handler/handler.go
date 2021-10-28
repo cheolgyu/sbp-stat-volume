@@ -26,9 +26,9 @@ func GetCodeList() []model.CodeInfo {
 			log.Fatal("InsertCodeUnit err ===> ", err)
 			log.Panic(err)
 		}
-		w_arr := detail_by_year(week, 1)
-		m_arr := detail_by_year(month, 2)
-		q_arr := detail_by_year(quarter, 3)
+		w_arr := detail_by_year(week, model.GetUnitValue("w"))
+		m_arr := detail_by_year(month, model.GetUnitValue("m"))
+		q_arr := detail_by_year(quarter, model.GetUnitValue("q"))
 
 		// log.Println(w_arr)
 		// log.Println(m_arr)
@@ -87,9 +87,9 @@ func sum_by_unit(code_id int, list []model.PriceInfo) ([]model.CodeSum, map[int]
 
 	}
 	var res []model.CodeSum
-	res = append(res, sum(code_id, 1, week)...)
-	res = append(res, sum(code_id, 2, month)...)
-	res = append(res, sum(code_id, 3, quarter)...)
+	res = append(res, sum(code_id, model.GetUnitValue("w"), week)...)
+	res = append(res, sum(code_id, model.GetUnitValue("m"), month)...)
+	res = append(res, sum(code_id, model.GetUnitValue("q"), quarter)...)
 	// log.Println(week)
 	// log.Println(month)
 	// log.Println(quarter)
@@ -108,6 +108,7 @@ func sum(code_id int, unit_type int, unit_map map[int]map[int]int) []model.CodeS
 			item.Year = year
 			item.Unit = k
 			item.Sum = v
+			item.SetRowPk()
 			res = append(res, item)
 		}
 	}

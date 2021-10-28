@@ -97,10 +97,10 @@ func GetPriceList(code_id int, dt int) ([]model.PriceInfo, error) {
 }
 
 const query_insert_tb_sum = `INSERT INTO  project_trading_volume.tb_sum (` +
-	`code_id, unit_type, yyyy, unit, sum_val)` +
-	`VALUES ($1, $2, $3, $4, $5)` +
-	` ON CONFLICT (code_id, unit_type, yyyy, unit) DO UPDATE SET ` +
-	`   sum_val=$5`
+	`row_pk, code_id, unit_type, yyyy, unit, sum_val)` +
+	`VALUES ($1, $2, $3, $4, $5, $6)` +
+	` ON CONFLICT (row_pk) DO UPDATE SET ` +
+	`   sum_val = tb_sum.sum_val+$6  ; `
 
 func InsertTbSum(list []model.CodeSum) error {
 
@@ -116,7 +116,7 @@ func InsertTbSum(list []model.CodeSum) error {
 	for _, v := range list {
 
 		_, err = stmt.Exec(
-			v.Code.Id, v.UnitType, v.Year, v.Unit, v.Sum,
+			v.Row_pk, v.Code.Id, v.UnitType, v.Year, v.Unit, v.Sum,
 		)
 		if err != nil {
 			log.Println("쿼리:stmt.Exec 오류: ")

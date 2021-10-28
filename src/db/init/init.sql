@@ -2,12 +2,13 @@
 -- CREATE SCHEMA "project_trading_volume";
 DROP TABLE IF EXISTS project_trading_volume.tb_sum CASCADE;
 CREATE TABLE project_trading_volume.tb_sum(
+    row_pk varchar not null,
     code_id INTEGER NOT NULL,
     unit_type INTEGER NOT NULL,
     yyyy INTEGER,
     unit INTEGER,
     sum_val bigint,
-    CONSTRAINT tb_sum_pk PRIMARY KEY (code_id, unit_type, yyyy, unit)
+    CONSTRAINT tb_sum_pk PRIMARY KEY (row_pk)
 );
 DROP TABLE IF EXISTS project_trading_volume.tb_year CASCADE;
 -- // 1 :week ,2 : month, 3: q
