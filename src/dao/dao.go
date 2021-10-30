@@ -170,10 +170,10 @@ func SelectTbSumByUnitType(item model.CodeInfo, unit_type int) ([]model.CodeSum,
 }
 
 const query_insert_tb_year = `INSERT INTO  project_trading_volume.tb_year (` +
-	`code_id, unit_type, yyyy, max_unit, max_unit_arr, min_unit, min_unit_arr, avg_vol, percent)` +
+	`code_id, unit_type, yyyy, max_unit, max_unit_arr, min_unit, min_unit_arr, avg_vol, rate)` +
 	`VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)` +
 	` ON CONFLICT (code_id, unit_type, yyyy) DO UPDATE SET ` +
-	`  max_unit=$4, max_unit_arr=$5, min_unit=$6, min_unit_arr=$7, avg_vol=$8, percent=$9`
+	`  max_unit=$4, max_unit_arr=$5, min_unit=$6, min_unit_arr=$7, avg_vol=$8, rate=$9`
 
 func InsertTbYear(item model.CodeUnit) error {
 
@@ -185,19 +185,19 @@ func InsertTbYear(item model.CodeUnit) error {
 		panic(err)
 	}
 	defer stmt.Close()
-	//code_id, unit_type, yyyy,  max_unit, max_unit_arr, min_unit, min_unit_arr, avg_vol, percent
+	//code_id, unit_type, yyyy,  max_unit, max_unit_arr, min_unit, min_unit_arr, avg_vol, rate
 	for _, v := range item.List {
-		percent_json, jerr := json.Marshal(v.Percent)
+		rate_json, jerr := json.Marshal(v.Rate)
 		if jerr != nil {
 
 			log.Printf("josn 변환 오류 %+v ", item.Code)
 			log.Printf("%+v ", v)
-			log.Fatal(" josn 변환 오류", v.Percent)
+			log.Fatal(" josn 변환 오류", v.Rate)
 			log.Panic(jerr)
 		}
 
 		_, err = stmt.Exec(
-			item.Code.Id, v.Unit, v.Year, v.Max, pq.Array(v.Up), v.Min, pq.Array(v.Down), v.Avg, percent_json,
+			item.Code.Id, v.Unit, v.Year, v.Max, pq.Array(v.Up), v.Min, pq.Array(v.Down), v.Avg, rate_json,
 		)
 		if err != nil {
 			log.Println("쿼리:stmt.Exec 오류: ")
@@ -208,4 +208,56 @@ func InsertTbYear(item model.CodeUnit) error {
 	}
 
 	return err
+}
+
+func SelectTbYear(item model.CodeInfo, unit_type int) ([]model.CodeYear, error) {
+	var res []model.CodeYear
+	query := `
+	SELECT code_id, unit_type, yyyy, max_unit, max_unit_arr, min_unit, min_unit_arr, avg_vol, rate
+	FROM project_trading_volume.tb_year
+	WHERE	code_id =  $1 and unit_type = $2 
+	order by yyyy asc
+		
+`
+	//log.Println(query)
+	rows, err := db.Conn.QueryContext(context.Background(), query, item.Code.Id, unit_type)
+	if err != nil {
+		log.Fatal(err)
+		panic(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		item := model.CodeYear{}
+		var max_arr pq.Int64Array
+		var min_arr pq.Int64Array
+		var jsonData string
+
+		//code_id, unit_type, yyyy, max_unit, max_unit_arr, min_unit, min_unit_arr, avg_vol, rate
+		if err := rows.Scan(&item.Code.Id, &item.UnitType,
+			&item.UnitByYear.Year, &item.UnitByYear.Max, &max_arr,
+			&item.UnitByYear.Min, &min_arr,
+			&item.UnitByYear.Avg, &jsonData); err != nil {
+			log.Fatal(err)
+			panic(err)
+		}
+		for _, v := range max_arr {
+			item.UnitByYear.Up = append(item.UnitByYear.Up, int(v))
+		}
+		for _, v := range min_arr {
+			item.UnitByYear.Up = append(item.UnitByYear.Down, int(v))
+		}
+		json.Unmarshal([]byte(jsonData), &item.UnitByYear.Rate)
+		//log.Printf("%+v ", item.UnitByYear.Rate)
+
+		res = append(res, item)
+
+	}
+	// Check for errors from iterating over rows.
+	if err := rows.Err(); err != nil {
+		log.Fatal(err)
+		panic(err)
+	}
+
+	return res, err
 }

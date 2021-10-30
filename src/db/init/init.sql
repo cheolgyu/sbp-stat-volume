@@ -2,7 +2,7 @@
 -- CREATE SCHEMA "project_trading_volume";
 DROP TABLE IF EXISTS project_trading_volume.tb_sum CASCADE;
 CREATE TABLE project_trading_volume.tb_sum(
-    row_pk varchar PRIMARY KEY,
+    row_pk VARCHAR PRIMARY KEY,
     code_id INTEGER NOT NULL,
     unit_type INTEGER NOT NULL,
     yyyy INTEGER,
@@ -20,19 +20,22 @@ CREATE TABLE project_trading_volume.tb_year (
     min_unit INTEGER,
     min_unit_arr INTEGER [ ],
     avg_vol bigint,
-    percent JSONB,
+    rate JSONB,
     CONSTRAINT tb_year_pk PRIMARY KEY (code_id, unit_type, yyyy)
 );
 DROP TABLE IF EXISTS project_trading_volume.tb_total CASCADE;
 CREATE TABLE project_trading_volume.tb_total (
     code_id INTEGER NOT NULL,
     unit_type INTEGER NOT NULL,
+    yyyy_cnt INTEGER,
     max_unit INTEGER,
-    max_unit_arr INTEGER [ ],
+    max_percent DOUBLE PRECISION,
     min_unit INTEGER,
-    min_unit_arr INTEGER [ ],
+    min_percent DOUBLE PRECISION,
+    max_rate JSONB,
+    min_rate JSONB,
+    max_arr_rate JSONB,
+    min_arr_rate JSONB,
     avg_vol bigint,
-    percent JSONB,
-    last_updated INTEGER,
     CONSTRAINT tb_total_pk PRIMARY KEY (code_id, unit_type)
 );

@@ -18,8 +18,8 @@ func GetCodeList() []model.CodeInfo {
 
 	//log.Println(res)
 	for _, v := range res {
-		DoSumByUnit(v)
-		DoCalculateUnitDataByYear(v)
+		//DoSumByUnit(v)
+		//DoCalculateUnitDataByYear(v)
 		DoYearOfTotal(v)
 	}
 
@@ -80,8 +80,23 @@ TB_YEAR목록을 조회 후 계산하여 저장 하기.
 */
 func DoYearOfTotal(code_info model.CodeInfo) {
 	// 조회
+	for _, v := range model.UnitType {
+
+		list, err := dao.SelectTbYear(code_info, v)
+		if err != nil {
+			log.Fatal("InsertCodeUnit err ===> ", err)
+			log.Panic(err)
+		}
+		log.Println(list)
+	}
 	// 계산
+
 	// 저장
+
+}
+
+func total_year(code_info model.CodeInfo, unit_type int, list []model.CodeYear) {
+
 }
 
 func sum_by_unit(code_id int, list []model.PriceInfo) []model.CodeSum {
@@ -227,12 +242,12 @@ func agg_by_year(unit_map map[int]map[int]int, unit_type int) []model.UnitByYear
 		//log.Println("split avg  up_arr,down_arr=", up_arr, down_arr)
 
 		//percent
-		percent := make(map[int]float64)
+		rate := make(map[int]float64)
 		for _, k := range sort_keys {
 			//log.Println("k,v=", k, float32(week[year][k])/float32(sum)*100)
 			per := float64(unit_map[year][k]) / float64(sum) * 100
 			if !math.IsNaN(per) {
-				percent[k] = math.Round(per*100) / 100
+				rate[k] = math.Round(per*100) / 100
 			}
 
 		}
@@ -244,7 +259,7 @@ func agg_by_year(unit_map map[int]map[int]int, unit_type int) []model.UnitByYear
 		item.Min = min_k
 		item.Up = up_arr
 		item.Down = down_arr
-		item.Percent = percent
+		item.Rate = rate
 		item.Avg = avg_v
 
 		res = append(res, item)

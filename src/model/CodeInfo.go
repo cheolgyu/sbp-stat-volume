@@ -76,12 +76,39 @@ type CodeUnit struct {
 
 type UnitByYear struct {
 	// 1 :week ,2 : month, 3: q
+	Unit int
+	Year int
+	Max  int
+	Min  int
+	Avg  int
+	Up   []int
+	Down []int
+	Rate map[int]float64
+}
+
+type CodeYear struct {
+	Code
+	UnitType int
+	UnitByYear
+}
+type CodeTotal struct {
+	Code
+	UnitType int
+	UnitByTotal
+}
+
+type UnitByTotal struct {
+	// 1 :week ,2 : month, 3: q
 	Unit    int
-	Year    int
-	Max     int
-	Min     int
-	Avg     int
-	Up      []int
-	Down    []int
-	Percent map[int]float64
+	YearCnt int
+
+	MaxUnit    int
+	MaxPercent float64
+	MinUnit    int
+	MinPercent float64
+	MaxRate    map[int]float64
+	MinRate    map[int]float64
+	MaxArrRate map[int]float64
+	MinArrRate map[int]float64
+	Avg        int
 }
