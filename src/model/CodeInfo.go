@@ -102,13 +102,14 @@ type UnitByTotal struct {
 	Unit    int
 	YearCnt int
 
-	MaxUnit    int
-	MaxPercent float64
-	MinUnit    int
-	MinPercent float64
-	MaxRate    map[int]float64
-	MinRate    map[int]float64
-	MaxArrRate map[int]float64
-	MinArrRate map[int]float64
-	Avg        int
+	MaxUnit     int
+	MaxPercent  float64
+	MinUnit     int
+	MinPercent  float64
+	MaxRate     map[int]float64
+	MinRate     map[int]float64
+	MaxArrRate  map[int]float64
+	MinArrRate  map[int]float64
+	Avg         int
+	LastUpdated int
 }

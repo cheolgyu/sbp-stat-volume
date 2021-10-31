@@ -17,7 +17,7 @@ func GetCodeList() []model.CodeInfo {
 	}
 
 	//log.Println(res)
-	for _, v := range res {
+	for _, v := range res[:1] {
 		//DoSumByUnit(v)
 		//DoCalculateUnitDataByYear(v)
 		DoYearOfTotal(v)
@@ -79,24 +79,85 @@ func DoCalculateUnitDataByYear(code_info model.CodeInfo) {
 TB_YEAR목록을 조회 후 계산하여 저장 하기.
 */
 func DoYearOfTotal(code_info model.CodeInfo) {
-	// 조회
+
 	for _, v := range model.UnitType {
 
+		var res []model.CodeTotal
+
+		// 조회
 		list, err := dao.SelectTbYear(code_info, v)
 		if err != nil {
 			log.Fatal("InsertCodeUnit err ===> ", err)
 			log.Panic(err)
 		}
-		log.Println(list)
+
+		// 계산
+		res = append(res, total_year(code_info, v, list))
+		err = dao.InsertTbTotal(res)
+		if err != nil {
+			log.Fatal("InsertTbTotal err ===> ", err)
+			log.Panic(err)
+		}
 	}
-	// 계산
 
 	// 저장
+	//res
 
 }
 
-func total_year(code_info model.CodeInfo, unit_type int, list []model.CodeYear) {
+type kv struct {
+	Key   int
+	Value int
+}
 
+func total_year(code_info model.CodeInfo, unit_type int, list []model.CodeYear) model.CodeTotal {
+	var cnt int = 0
+	var item model.CodeTotal
+	item.Code = code_info.Code
+	item.UnitType = unit_type
+
+	if len(list) < 2 {
+		log.Println("비교하려면 2개 이상이여야됨.")
+		return item
+	}
+
+	max_map := make(map[int]int)
+
+	for i := 0; i < len(list); i++ {
+
+		i_max := list[i].UnitByYear.Max
+		max_map[i_max] = max_map[i_max] + 1
+
+		cnt++
+	}
+
+	log.Printf("max_map : %+v", max_map)
+
+	// MaxPercent
+	// MaxPercent - find max value
+	var ss []kv
+	for k, v := range max_map {
+		ss = append(ss, kv{k, v})
+	}
+
+	sort.Slice(ss, func(i, j int) bool {
+		return ss[i].Value > ss[j].Value
+	})
+
+	var all int
+	for _, kv := range ss {
+		log.Printf("%+v,: %+v", kv.Key, kv.Value)
+		all += kv.Value
+	}
+	// MaxPercent - find max value rate
+
+	item.UnitByTotal.MaxUnit = ss[0].Key
+	item.UnitByTotal.MaxPercent = float64(ss[0].Value) / float64(all) * 100
+	item.UnitByTotal.YearCnt = cnt
+
+	log.Printf("item : %+v", item)
+
+	return item
 }
 
 func sum_by_unit(code_id int, list []model.PriceInfo) []model.CodeSum {

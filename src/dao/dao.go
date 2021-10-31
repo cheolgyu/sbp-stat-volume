@@ -261,3 +261,73 @@ func SelectTbYear(item model.CodeInfo, unit_type int) ([]model.CodeYear, error) 
 
 	return res, err
 }
+
+const query_insert_tb_total = `INSERT INTO  project_trading_volume.tb_total (` +
+	`code_id, unit_type, yyyy_cnt, max_unit, max_percent, min_unit, min_percent, max_rate, min_rate, max_arr_rate, min_arr_rate, avg_vol, last_updated)` +
+	`VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13 )` +
+	` ON CONFLICT (code_id, unit_type) DO UPDATE SET ` +
+	`  yyyy_cnt=$3, max_unit=$4, max_percent=$5, min_unit=$6, min_percent=$7, max_rate=$8, min_rate=$9, max_arr_rate=$10, min_arr_rate=$11, avg_vol=$12, last_updated=$13 `
+
+func InsertTbTotal(list []model.CodeTotal) error {
+
+	client := db.Conn
+	stmt, err := client.Prepare(query_insert_tb_total)
+	if err != nil {
+		log.Println("쿼리:Prepare 오류: ")
+		log.Fatal(err)
+		panic(err)
+	}
+	defer stmt.Close()
+	//code_id, unit_type,  max_unit, sum_val
+	for _, v := range list {
+
+		max_rate, jerr := json.Marshal(v.UnitByTotal.MaxRate)
+		if jerr != nil {
+
+			log.Printf("josn 변환 오류 %+v ", v.Code)
+			log.Printf("%+v ", v)
+			log.Fatal(" josn 변환 오류", v.UnitByTotal.MaxRate)
+			log.Panic(jerr)
+		}
+		min_rate, jerr := json.Marshal(v.UnitByTotal.MinRate)
+		if jerr != nil {
+
+			log.Printf("josn 변환 오류 %+v ", v.Code)
+			log.Printf("%+v ", v)
+			log.Fatal(" josn 변환 오류", v.UnitByTotal.MinRate)
+			log.Panic(jerr)
+		}
+		max_arr_rate, jerr := json.Marshal(v.UnitByTotal.MaxArrRate)
+		if jerr != nil {
+
+			log.Printf("josn 변환 오류 %+v ", v.Code)
+			log.Printf("%+v ", v)
+			log.Fatal(" josn 변환 오류", v.UnitByTotal.MaxArrRate)
+			log.Panic(jerr)
+		}
+		min_arr_rate, jerr := json.Marshal(v.UnitByTotal.MinArrRate)
+		if jerr != nil {
+
+			log.Printf("josn 변환 오류 %+v ", v.Code)
+			log.Printf("%+v ", v)
+			log.Fatal(" josn 변환 오류", v.UnitByTotal.MinArrRate)
+			log.Panic(jerr)
+		}
+		//code_id, unit_type, yyyy_cnt, max_unit, max_percent,
+		//min_unit, min_percent, max_rate, min_rate, max_arr_rate,
+		// min_arr_rate, avg_vol, last_updated)` +
+		_, err = stmt.Exec(
+			v.Code.Id, v.UnitType, v.UnitByTotal.YearCnt, v.UnitByTotal.MaxUnit, v.UnitByTotal.MaxPercent,
+			v.UnitByTotal.MinUnit, v.UnitByTotal.MinPercent, max_rate, min_rate, max_arr_rate,
+			min_arr_rate, v.UnitByTotal.Avg, v.UnitByTotal.LastUpdated,
+		)
+		if err != nil {
+			log.Println("쿼리:stmt.Exec 오류: ")
+			log.Printf("%+v ", v)
+			log.Fatal(err)
+			panic(err)
+		}
+	}
+
+	return err
+}

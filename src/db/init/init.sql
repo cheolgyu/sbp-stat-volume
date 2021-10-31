@@ -37,5 +37,6 @@ CREATE TABLE project_trading_volume.tb_total (
     max_arr_rate JSONB,
     min_arr_rate JSONB,
     avg_vol bigint,
+    last_updated INT,
     CONSTRAINT tb_total_pk PRIMARY KEY (code_id, unit_type)
 );
