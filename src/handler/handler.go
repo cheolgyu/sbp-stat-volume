@@ -16,11 +16,11 @@ func GetCodeList() []model.CodeInfo {
 		log.Panic("GetCodeList 에러")
 	}
 
-	//log.Println(res)
+	//log.Println(res[:1])
 	for _, v := range res[:1] {
-		//DoSumByUnit(v)
-		//DoCalculateUnitDataByYear(v)
-		DoYearOfTotal(v)
+		DoSumByUnit(&v)
+		DoCalculateUnitDataByYear(v)
+		DoYearOfTotal(&v)
 	}
 
 	return res
@@ -29,10 +29,13 @@ func GetCodeList() []model.CodeInfo {
 /*
 코드의 마지막 업데이트일 이후의 가격목록을 unit별 합계를 구해서 TB_SUM에 저장하기
 */
-func DoSumByUnit(code_info model.CodeInfo) {
+func DoSumByUnit(code_info *model.CodeInfo) {
 	new_price_arr, err := dao.GetPriceList(code_info.Code.Id, code_info.LastUpdated)
 	if err != nil {
 		log.Panic("GetPriceList 에러")
+	}
+	if len(new_price_arr) > 1 {
+		code_info.LastUpdated = new_price_arr[len(new_price_arr)-1].Dt
 	}
 
 	//log.Println(price_arr)
@@ -78,14 +81,14 @@ func DoCalculateUnitDataByYear(code_info model.CodeInfo) {
 /*
 TB_YEAR목록을 조회 후 계산하여 저장 하기.
 */
-func DoYearOfTotal(code_info model.CodeInfo) {
+func DoYearOfTotal(code_info *model.CodeInfo) {
 
 	for _, v := range model.UnitType {
 
 		var res []model.CodeTotal
 
 		// 조회
-		list, err := dao.SelectTbYear(code_info, v)
+		list, err := dao.SelectTbYear(*code_info, v)
 		if err != nil {
 			log.Fatal("InsertCodeUnit err ===> ", err)
 			log.Panic(err)
@@ -110,7 +113,7 @@ type kv struct {
 	Value int
 }
 
-func total_year(code_info model.CodeInfo, unit_type int, list []model.CodeYear) model.CodeTotal {
+func total_year(code_info *model.CodeInfo, unit_type int, list []model.CodeYear) model.CodeTotal {
 	var cnt int = 0
 	var item model.CodeTotal
 	item.Code = code_info.Code
@@ -122,38 +125,46 @@ func total_year(code_info model.CodeInfo, unit_type int, list []model.CodeYear) 
 	}
 
 	max_map := make(map[int]int)
+	min_map := make(map[int]int)
+	avg_sum := 0
 
 	for i := 0; i < len(list); i++ {
 
 		i_max := list[i].UnitByYear.Max
 		max_map[i_max] = max_map[i_max] + 1
 
+		i_min := list[i].UnitByYear.Min
+		min_map[i_min] = min_map[i_min] + 1
+		avg_sum += list[i].Avg
 		cnt++
 	}
 
-	log.Printf("max_map : %+v", max_map)
+	//log.Printf("max_map : %+v", max_map)
 
-	// MaxPercent
-	// MaxPercent - find max value
-	var ss []kv
-	for k, v := range max_map {
-		ss = append(ss, kv{k, v})
+	arr_max := map_sort(max_map, true)
+	arr_min := map_sort(min_map, true)
+
+	var all_max int
+	for _, kv := range arr_max {
+		//log.Printf("%+v,: %+v", kv.Key, kv.Value)
+		all_max += kv.Value
 	}
-
-	sort.Slice(ss, func(i, j int) bool {
-		return ss[i].Value > ss[j].Value
-	})
-
-	var all int
-	for _, kv := range ss {
-		log.Printf("%+v,: %+v", kv.Key, kv.Value)
-		all += kv.Value
+	var all_min int
+	for _, kv := range arr_min {
+		//log.Printf("%+v,: %+v", kv.Key, kv.Value)
+		all_min += kv.Value
 	}
 	// MaxPercent - find max value rate
 
-	item.UnitByTotal.MaxUnit = ss[0].Key
-	item.UnitByTotal.MaxPercent = float64(ss[0].Value) / float64(all) * 100
+	item.UnitByTotal.MaxUnit = arr_max[0].Key
+	item.UnitByTotal.MaxPercent = float64(arr_max[0].Value) / float64(all_max) * 100
+	item.UnitByTotal.MaxRate = percent(max_map)
+	item.UnitByTotal.MinUnit = arr_min[0].Key
+	item.UnitByTotal.MinPercent = float64(arr_min[0].Value) / float64(all_min) * 100
+	item.UnitByTotal.MinRate = percent(min_map)
+	item.UnitByTotal.Avg = avg_sum / cnt
 	item.UnitByTotal.YearCnt = cnt
+	item.UnitByTotal.LastUpdated = code_info.LastUpdated
 
 	log.Printf("item : %+v", item)
 
@@ -280,7 +291,7 @@ func agg_by_year(unit_map map[int]map[int]int, unit_type int) []model.UnitByYear
 		//log.Println("min k,v=", min_k, min_v)
 
 		// avg
-		sum := -1
+		sum := 0
 		for _, v := range unit_map[year] {
 			sum += v
 		}
@@ -302,16 +313,6 @@ func agg_by_year(unit_map map[int]map[int]int, unit_type int) []model.UnitByYear
 		sort.Ints(down_arr)
 		//log.Println("split avg  up_arr,down_arr=", up_arr, down_arr)
 
-		//percent
-		rate := make(map[int]float64)
-		for _, k := range sort_keys {
-			//log.Println("k,v=", k, float32(week[year][k])/float32(sum)*100)
-			per := float64(unit_map[year][k]) / float64(sum) * 100
-			if !math.IsNaN(per) {
-				rate[k] = math.Round(per*100) / 100
-			}
-
-		}
 		//log.Println("percent=", percent)
 
 		item.Unit = unit_type
@@ -320,7 +321,7 @@ func agg_by_year(unit_map map[int]map[int]int, unit_type int) []model.UnitByYear
 		item.Min = min_k
 		item.Up = up_arr
 		item.Down = down_arr
-		item.Rate = rate
+		item.Rate = percent(unit_map[year])
 		item.Avg = avg_v
 
 		res = append(res, item)
@@ -328,4 +329,47 @@ func agg_by_year(unit_map map[int]map[int]int, unit_type int) []model.UnitByYear
 
 	return res
 
+}
+
+func percent(list map[int]int) map[int]float64 {
+
+	sort_keys := make([]int, 0, len(list))
+	for unit := range list {
+		sort_keys = append(sort_keys, unit)
+	}
+	sort.Ints(sort_keys)
+
+	rate := make(map[int]float64)
+	sum := 0
+	for _, v := range list {
+		sum += v
+	}
+
+	for _, k := range sort_keys {
+		//log.Println("k,v=", k, float32(week[year][k])/float32(sum)*100)
+		per := float64(list[k]) / float64(sum) * 100
+		if !math.IsNaN(per) {
+			rate[k] = math.Round(per*100) / 100
+		}
+
+	}
+	return rate
+}
+
+func map_sort(list map[int]int, high bool) []kv {
+	var res []kv
+	for k, v := range list {
+		res = append(res, kv{k, v})
+	}
+
+	sort.Slice(res, func(i, j int) bool {
+		if high {
+			return res[i].Value > res[j].Value
+		} else {
+			return res[i].Value < res[j].Value
+		}
+
+	})
+
+	return res
 }
