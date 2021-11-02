@@ -17,7 +17,7 @@ func GetCodeList() []model.CodeInfo {
 	}
 
 	//log.Println(res[:1])
-	for _, v := range res[:1] {
+	for _, v := range res {
 		DoSumByUnit(&v)
 		DoCalculateUnitDataByYear(v)
 		DoYearOfTotal(&v)
