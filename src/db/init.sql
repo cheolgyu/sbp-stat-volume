@@ -40,3 +40,29 @@ CREATE TABLE project_trading_volume.tb_total (
     last_updated INT,
     CONSTRAINT tb_total_pk PRIMARY KEY (code_id, unit_type)
 );
+
+
+DROP VIEW IF EXISTS "public.view_trading_volume";
+CREATE VIEW PUBLIC.view_trading_volume AS
+SELECT tt.CODE_id as mp_code,
+    tt.unit_type ,
+    --(select name from meta.config where id = tt.unit_type ) as unit_type_name,
+	pc.code_id,
+	pc.code,
+	pc.name,
+	pc.code_type,
+	(select name from meta.config where id = pc.code_type ) as code_type_name,
+	pc.market_type,
+	(select name from meta.config where id = pc.market_type ) as market_type_name,
+	tt.max_unit,
+	tt.max_percent,
+	tt.min_unit,
+	tt.min_percent,
+    tt.max_rate,
+    tt.min_rate,
+    tt.avg_vol,
+    tt.last_updated
+FROM only public.company pc
+	left join project_trading_volume.tb_total tt on tt.code_id = pc.code_id 
+where  tt.max_unit is not null
+order by tt.max_percent desc 
