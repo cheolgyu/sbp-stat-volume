@@ -6,7 +6,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "run stock-write-project-trading-volume ",
+            "label": "run sbp-stat-volume ",
             "type": "shell",
             "command": " go run main.go ",
             "args": [],
@@ -34,7 +34,7 @@
                     "GOARCH": "amd64",
                 }
             },
-          //  "command": "go build  -ldflags '-w -s' -a -installsuffix cgo   -o ../stock-write-ticker/bin/stock-write main.go",
+          //  "command": "go build  -ldflags '-w -s' -a -installsuffix cgo   -o ../sb-exe/bin/sbp-inp-data main.go",
             "dependsOrder": "sequence",
             "dependsOn": [
                 "1.1. build move file",
@@ -43,7 +43,7 @@
         {
             "label": "1.1. build move file",
             "type": "shell",
-         //   "command": " cp ./.env.prod ../stock-write-ticker/bin/.env.local",
+         //   "command": " cp ./.env.prod ../sb-exe/bin/.env.local",
         },
     ]
 }

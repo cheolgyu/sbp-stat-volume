@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/cheolgyu/stock-write-common/db"
-	"github.com/cheolgyu/stock-write-project-trading-volume/src/model"
+	"github.com/cheolgyu/sbm-base/db"
+	"github.com/cheolgyu/sbp-stat-volume/src/model"
 	"github.com/lib/pq"
 )
 
