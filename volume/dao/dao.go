@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"github.com/cheolgyu/base/db"
-	"github.com/cheolgyu/sbp-stat-volume/src/model"
+	"github.com/cheolgyu/stat/volume/model"
 	"github.com/lib/pq"
 )
 

@@ -4,7 +4,7 @@ import (
 	_ "github.com/cheolgyu/base/db"
 	_ "github.com/cheolgyu/base/env"
 	"github.com/cheolgyu/base/logging"
-	"github.com/cheolgyu/sbp-stat-volume/src/handler"
+	"github.com/cheolgyu/stat/volume/handler"
 )
 
 func main() {

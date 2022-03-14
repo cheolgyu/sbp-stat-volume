@@ -1,4 +1,4 @@
-module github.com/cheolgyu/sbp-stat-volume
+module github.com/cheolgyu/stat
 
 go 1.16
 

@@ -5,8 +5,8 @@ import (
 	"math"
 	"sort"
 
-	"github.com/cheolgyu/sbp-stat-volume/src/dao"
-	"github.com/cheolgyu/sbp-stat-volume/src/model"
+	"github.com/cheolgyu/stat/volume/dao"
+	"github.com/cheolgyu/stat/volume/model"
 )
 
 func GetCodeList() []model.CodeInfo {
