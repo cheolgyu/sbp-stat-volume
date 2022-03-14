@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/cheolgyu/sbm-base/db"
+	"github.com/cheolgyu/base/db"
 	"github.com/cheolgyu/sbp-stat-volume/src/model"
 	"github.com/lib/pq"
 )

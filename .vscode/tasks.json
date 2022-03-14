@@ -34,7 +34,7 @@
                     "GOARCH": "amd64",
                 }
             },
-          //  "command": "go build  -ldflags '-w -s' -a -installsuffix cgo   -o ../sb-exe/bin/sbp-inp-data main.go",
+          //  "command": "go build  -ldflags '-w -s' -a -installsuffix cgo   -o ../sb-exe/bin/input main.go",
             "dependsOrder": "sequence",
             "dependsOn": [
                 "1.1. build move file",
