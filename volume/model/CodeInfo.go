@@ -2,6 +2,8 @@ package model
 
 import (
 	"fmt"
+
+	"github.com/cheolgyu/model"
 )
 
 var UnitType map[string]int
@@ -15,20 +17,14 @@ func init() {
 }
 
 type CodeInfo struct {
-	Code
+	Code        model.Code
 	LastUpdated int
-	Opening
-}
-
-type Code struct {
-	Id        int
-	Code      string
-	Code_type int
+	Opening     model.Opening
 }
 
 type PriceInfo struct {
 	Price
-	Opening
+	Opening model.Opening
 }
 
 type Price struct {
@@ -36,16 +32,9 @@ type Price struct {
 	Volume int
 }
 
-type Opening struct {
-	YY      int
-	MM      int
-	DD      int
-	Week    int
-	Quarter int
-}
 type CodeSum struct {
-	Row_pk string
-	Code
+	Row_pk   string
+	Code     model.Code
 	UnitType int
 	Year     int
 	Unit     int
@@ -69,7 +58,7 @@ func GetUnitValue(unit string) int {
 }
 
 type CodeUnit struct {
-	Code
+	Code model.Code
 
 	List []UnitByYear
 }
@@ -87,12 +76,12 @@ type UnitByYear struct {
 }
 
 type CodeYear struct {
-	Code
+	Code     model.Code
 	UnitType int
 	UnitByYear
 }
 type CodeTotal struct {
-	Code
+	Code     model.Code
 	UnitType int
 	UnitByTotal
 }
