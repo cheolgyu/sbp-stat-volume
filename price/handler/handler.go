@@ -58,9 +58,9 @@ func Handler() {
 
 }
 
-func find(item model.CodeInfo) []cmm_model.Tb52Weeks {
+func find(item model.CodeInfo) []cmm_model.TbStatPrice {
 
-	var res []cmm_model.Tb52Weeks
+	var res []cmm_model.TbStatPrice
 	res = append(res, findPointInfo(item.Code.Id, item.OP, CONFIG_OP)...)
 	res = append(res, findPointInfo(item.Code.Id, item.CP, CONFIG_CP)...)
 	res = append(res, findPointInfo(item.Code.Id, item.LP, CONFIG_LP)...)
@@ -69,10 +69,10 @@ func find(item model.CodeInfo) []cmm_model.Tb52Weeks {
 	return res
 }
 
-func findPointInfo(code_id int, arr []model.PointInfo, price_type int) []cmm_model.Tb52Weeks {
+func findPointInfo(code_id int, arr []model.PointInfo, price_type int) []cmm_model.TbStatPrice {
 	var tmp model.PriceInfo
 
-	var res []cmm_model.Tb52Weeks
+	var res []cmm_model.TbStatPrice
 
 	if len(arr) > 0 {
 		tmp.Cur.X = arr[0].Point.X
@@ -98,7 +98,7 @@ func findPointInfo(code_id int, arr []model.PointInfo, price_type int) []cmm_mod
 			if v.Xcnt > t.Day && break_timeframes < t.Day {
 				break_timeframes = t.Day
 
-				max_item := cmm_model.Tb52Weeks{
+				max_item := cmm_model.TbStatPrice{
 					Code_id:    code_id,
 					Price_type: price_type,
 					P3_type:    cmm_model.P3_type_HIGH,
@@ -119,7 +119,7 @@ func findPointInfo(code_id int, arr []model.PointInfo, price_type int) []cmm_mod
 				}
 				res = append(res, max_item)
 
-				min_item := cmm_model.Tb52Weeks{
+				min_item := cmm_model.TbStatPrice{
 					Code_id:    code_id,
 					Price_type: price_type,
 					P3_type:    cmm_model.P3_type_LOW,

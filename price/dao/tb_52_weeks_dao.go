@@ -9,7 +9,7 @@ import (
 	"github.com/cheolgyu/stat/price/model"
 )
 
-const query_insert = `INSERT INTO project.tb_52_weeks( ` +
+const query_insert = `INSERT INTO stat.price( ` +
 	` code_id, price_type, p1x_Left, p1x, p1y, p2x, p2y, p3x, p3y, p3_type, p32y_percent) ` +
 	` VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11); `
 
@@ -27,7 +27,7 @@ order by dt desc
 	테이블 초기화
 */
 func Initail_table() {
-	query := `TRUNCATE table project.tb_52_weeks`
+	query := `TRUNCATE table stat.price`
 
 	_, err := db.Conn.Exec(query)
 	if err != nil {
@@ -76,7 +76,7 @@ func SelectList(code_id int) (model.CodeInfo, error) {
 	return res, err
 }
 
-func Insert(list []cmm_model.Tb52Weeks) error {
+func Insert(list []cmm_model.TbStatPrice) error {
 
 	client := db.Conn
 	stmt, err := client.Prepare(query_insert)

@@ -1,20 +1,20 @@
 package model
 
 import (
-	cmm_model "github.com/cheolgyu/model"
+	"github.com/cheolgyu/model"
 )
 
 /*
 DayCnt : 해당 일자가 365일에서 얼마나 경과된 일자인지
 */
 type Res struct {
-	cmm_model.Code
-	cmm_model.PriceMarket
+	model.Code
+	model.PriceMarket
 	DayCnt int
 }
 
 type CodeInfo struct {
-	cmm_model.Code
+	model.Code
 
 	OP []PointInfo
 	HP []PointInfo
@@ -93,7 +93,7 @@ type PriceInfo struct {
 }
 
 type PriceInfoItemRes struct {
-	cmm_model.Code
+	model.Code
 	PriceType int
 	Arr       []PriceInfoItem
 }
@@ -103,8 +103,8 @@ type PriceInfoItem struct {
 	TimeFrame
 }
 
-func (o *PriceInfoItem) to_comm_model() [2]cmm_model.Tb52Weeks {
-	var res [2]cmm_model.Tb52Weeks
+func (o *PriceInfoItem) to_comm_model() [2]model.TbStatPrice {
+	var res [2]model.TbStatPrice
 
 	return res
 }
