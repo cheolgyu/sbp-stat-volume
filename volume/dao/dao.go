@@ -22,7 +22,7 @@ SELECT MC.ID,
 	COALESCE(MO.WEEK,0 ) as week,
 	COALESCE(MO.QUARTER,0 ) as quarter
 FROM META.CODE MC
-LEFT JOIN PROJECT_TRADING_VOLUME.TB_TOTAL TR ON MC.ID = TR.CODE_ID
+LEFT JOIN stat.volume_total TR ON MC.ID = TR.CODE_ID
 LEFT JOIN META.OPENING MO ON TR.LAST_UPDATED = MO.DT
 WHERE MC.CODE_TYPE = 1
 	
@@ -100,11 +100,11 @@ func GetPriceList(code_id int, dt int) ([]model.PriceInfo, error) {
 	return res, err
 }
 
-const query_insert_tb_sum = `INSERT INTO  project_trading_volume.tb_sum (` +
+const query_insert_tb_sum = `INSERT INTO  stat.volume_sum (` +
 	`row_pk, code_id, unit_type, yyyy, unit, sum_val)` +
 	`VALUES ($1, $2, $3, $4, $5, $6)` +
 	` ON CONFLICT (row_pk) DO UPDATE SET ` +
-	`   sum_val = tb_sum.sum_val+$6  ; `
+	`   sum_val = volume_sum.sum_val+$6  ; `
 
 func InsertTbSum(list []model.CodeSum) error {
 
@@ -137,7 +137,7 @@ func SelectTbSumByUnitType(item model.CodeInfo, unit_type int) ([]model.CodeSum,
 	var res []model.CodeSum
 	query := `
 	SELECT row_pk, code_id, unit_type, yyyy, unit, sum_val
-	FROM project_trading_volume.tb_sum
+	FROM stat.volume_sum
 	WHERE	code_id =  $1 and unit_type = $2 
 		and yyyy >= $3
 		 
@@ -169,7 +169,7 @@ func SelectTbSumByUnitType(item model.CodeInfo, unit_type int) ([]model.CodeSum,
 	return res, err
 }
 
-const query_insert_tb_year = `INSERT INTO  project_trading_volume.tb_year (` +
+const query_insert_tb_year = `INSERT INTO  stat.volume_year (` +
 	`code_id, unit_type, yyyy, max_unit, max_unit_arr, min_unit, min_unit_arr, avg_vol, rate)` +
 	`VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)` +
 	` ON CONFLICT (code_id, unit_type, yyyy) DO UPDATE SET ` +
@@ -214,7 +214,7 @@ func SelectTbYear(item model.CodeInfo, unit_type int) ([]model.CodeYear, error) 
 	var res []model.CodeYear
 	query := `
 	SELECT code_id, unit_type, yyyy, max_unit, max_unit_arr, min_unit, min_unit_arr, avg_vol, rate
-	FROM project_trading_volume.tb_year
+	FROM stat.volume_year
 	WHERE	code_id =  $1 and unit_type = $2 
 	order by yyyy asc
 		
@@ -262,7 +262,7 @@ func SelectTbYear(item model.CodeInfo, unit_type int) ([]model.CodeYear, error) 
 	return res, err
 }
 
-const query_insert_tb_total = `INSERT INTO  project_trading_volume.tb_total (` +
+const query_insert_volume_total = `INSERT INTO  stat.volume_total (` +
 	`code_id, unit_type, yyyy_cnt, max_unit, max_percent, min_unit, min_percent, max_rate, min_rate, max_arr_rate, min_arr_rate, avg_vol, last_updated)` +
 	`VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13 )` +
 	` ON CONFLICT (code_id, unit_type) DO UPDATE SET ` +
@@ -271,7 +271,7 @@ const query_insert_tb_total = `INSERT INTO  project_trading_volume.tb_total (` +
 func InsertTbTotal(list []model.CodeTotal) error {
 
 	client := db.Conn
-	stmt, err := client.Prepare(query_insert_tb_total)
+	stmt, err := client.Prepare(query_insert_volume_total)
 	if err != nil {
 		log.Println("쿼리:Prepare 오류: ")
 		log.Fatal(err)

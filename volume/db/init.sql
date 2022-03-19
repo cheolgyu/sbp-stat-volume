@@ -1,7 +1,7 @@
--- DROP SCHEMA IF EXISTS "project_trading_volume" CASCADE;
--- CREATE SCHEMA "project_trading_volume";
-DROP TABLE IF EXISTS project_trading_volume.tb_sum CASCADE;
-CREATE TABLE project_trading_volume.tb_sum(
+-- DROP SCHEMA IF EXISTS "stat" CASCADE;
+-- CREATE SCHEMA "stat";
+DROP TABLE IF EXISTS stat.volume_sum CASCADE;
+CREATE TABLE stat.volume_sum(
     row_pk VARCHAR PRIMARY KEY,
     code_id INTEGER NOT NULL,
     unit_type INTEGER NOT NULL,
@@ -9,9 +9,9 @@ CREATE TABLE project_trading_volume.tb_sum(
     unit INTEGER,
     sum_val bigint
 );
-DROP TABLE IF EXISTS project_trading_volume.tb_year CASCADE;
+DROP TABLE IF EXISTS stat.volume_year CASCADE;
 -- // 1 :week ,2 : month, 3: q
-CREATE TABLE project_trading_volume.tb_year (
+CREATE TABLE stat.volume_year (
     code_id INTEGER NOT NULL,
     unit_type INTEGER NOT NULL,
     yyyy INTEGER,
@@ -23,8 +23,8 @@ CREATE TABLE project_trading_volume.tb_year (
     rate JSONB,
     CONSTRAINT tb_year_pk PRIMARY KEY (code_id, unit_type, yyyy)
 );
-DROP TABLE IF EXISTS project_trading_volume.tb_total CASCADE;
-CREATE TABLE project_trading_volume.tb_total (
+DROP TABLE IF EXISTS stat.volume_total CASCADE;
+CREATE TABLE stat.volume_total (
     code_id INTEGER NOT NULL,
     unit_type INTEGER NOT NULL,
     yyyy_cnt INTEGER,
@@ -38,12 +38,12 @@ CREATE TABLE project_trading_volume.tb_total (
     min_arr_rate JSONB,
     avg_vol bigint,
     last_updated INT,
-    CONSTRAINT tb_total_pk PRIMARY KEY (code_id, unit_type)
+    CONSTRAINT volume_total_pk PRIMARY KEY (code_id, unit_type)
 );
 
 
-DROP VIEW IF EXISTS "public.view_trading_volume";
-CREATE VIEW PUBLIC.view_trading_volume AS
+DROP VIEW IF EXISTS "public.view_volume";
+CREATE VIEW PUBLIC.view_volume AS
 SELECT tt.CODE_id as mp_code,
     tt.unit_type ,
     --(select name from meta.config where id = tt.unit_type ) as unit_type_name,
@@ -63,15 +63,15 @@ SELECT tt.CODE_id as mp_code,
     tt.avg_vol,
     tt.last_updated
 FROM only public.company pc
-	left join project_trading_volume.tb_total tt on tt.code_id = pc.code_id 
+	left join stat.volume_total tt on tt.code_id = pc.code_id 
 where  tt.max_unit is not null
 order by tt.max_percent desc 
 
 
-DROP VIEW IF EXISTS "view_project_trading_volume";
+DROP VIEW IF EXISTS "view_volume";
 
 
-CREATE VIEW PUBLIC.VIEW_PROJECT_TRADING_VOLUME AS
+CREATE VIEW PUBLIC.view_volume AS
 SELECT CMP.CODE_ID,
 	CMP.CODE,
 	CMP.NAME,
@@ -98,7 +98,7 @@ SELECT CMP.CODE_ID,
 	VTB.MIN_ARR_RATE,
 	VTB.AVG_VOL,
 	VTB.LAST_UPDATED
-FROM PROJECT_TRADING_VOLUME.TB_TOTAL VTB
+FROM stat.volume_total VTB
 LEFT JOIN ONLY COMPANY CMP ON VTB.CODE_ID = CMP.CODE_ID
 ORDER BY VTB.MAX_PERCENT DESC,
 	VTB.YYYY_CNT DESC ;
